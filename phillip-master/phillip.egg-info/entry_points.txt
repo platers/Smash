@@ -1,0 +1,3 @@
+[console_scripts]
+phillip = phillip.run:main
+

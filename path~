@@ -1,0 +1,2 @@
+python3 phillip/run.py --gui --human --start 0 --reload 0 --epsilon 0 --load agents/FalconFalconBF --iso /home/victor/Downloads/SSBMv1.00.iso --exe /usr/games/dolphin-emu
+

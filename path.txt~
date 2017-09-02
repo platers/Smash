@@ -1,0 +1,5 @@
+python3 phillip/run.py --gui --human --start 0 --reload 0 --epsilon 0 --load agents/FalconFalconBF --iso /home/victor/Downloads/SSBM.iso --exe /usr/games/dolphin-emu
+
+python3 phillip/run.py --gui --cpu 9 --start 0 --reload 0 --epsilon 0 --load agents/FalconFalconBF --iso /home/victor/Downloads/SSBM.iso --exe /usr/games/dolphin-emu
+
+python3 phillip/run.py --gui --cpu 1 --p1 falcon --start 0 --reload 0 --epsilon 0 --load agents/FalconFalconBF --iso /home/victor/Downloads/SSBM.iso --exe /usr/games/dolphin-emu
