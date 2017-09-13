@@ -2,8 +2,10 @@ phillip/RL.py
 phillip/__init__.py
 phillip/ac.py
 phillip/agent.py
+phillip/agentcopy.py
 phillip/cg.py
 phillip/cpu.py
+phillip/cpucopy.py
 phillip/critic.py
 phillip/ctype_util.py
 phillip/data.py
@@ -24,6 +26,7 @@ phillip/rdqn.py
 phillip/reward.py
 phillip/rl_common.py
 phillip/run.py
+phillip/runcopy.py
 phillip/ssbm.py
 phillip/state.py
 phillip/state_manager.py

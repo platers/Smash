@@ -1,5 +1,4 @@
-python3 phillip/run.py --gui --human --start 0 --reload 0 --epsilon 0 --load agents/FalconFalconBF --iso /home/victor/Downloads/SSBM.iso --exe /usr/games/dolphin-emu
+python3 phillip/run.py --gui --human --start 0 --reload 0 --epsilon 0 --load agents/FalconFalconBF --iso /home/victor/Downloads/SSBM.iso --exe /usr/games/dolphin-emu --mute --disk 1
 
-python3 phillip/run.py --gui --cpu 9 --start 0 --reload 0 --epsilon 0 --load agents/FalconFalconBF --iso /home/victor/Downloads/SSBM.iso --exe /usr/games/dolphin-emu
-
-python3 phillip/run.py --gui --start 0 --reload 0 --epsilon 0 --load agents/FoxFD0 --iso /home/victor/Downloads/SSBM.iso --exe /usr/games/dolphin-emu --experience_time 10
+not dumping
+python3 phillip/runcopy.py --gui --human --start 0 --reload 0 --epsilon 0 --load agents/FalconFalconBF --iso /home/victor/Downloads/SSBM.iso --exe /usr/games/dolphin-emu --mute

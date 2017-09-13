@@ -41,7 +41,7 @@ class RL(Default):
     Option('profile', type=int, default=0, help='profile tensorflow graph execution'),
     Option('save_cpu', type=int, default=0),
   ]
-  
+
   _members = [
     ('config', RLConfig),
     ('embedGame', embed.GameEmbedding),
@@ -49,34 +49,34 @@ class RL(Default):
     ('model', Model),
     #('opt', Optimizer),
   ]
-  
+
   def __init__(self, mode = Mode.TRAIN, debug = False, **kwargs):
     Default.__init__(self, init_members=False, **kwargs)
     self.config = RLConfig(**kwargs)
-    
+
     if self.name is None:
       self.name = self.policy
-    
+
     if self.path is None:
       self.path = "saves/%s/" % self.name
-    
+
     self.snapshot = os.path.join(self.path, 'snapshot')
-    
+
     policyType = policies[self.policy]
     self.actionType = ssbm.actionTypes[self.action_type]
     embedAction = embed.OneHotEmbedding("action", self.actionType.size)
 
     self.graph = tf.Graph()
-    
+
     device = '/gpu:0' if self.gpu else '/cpu:0'
     print("Using device " + device)
-    
+
     if not self.gpu:
       os.environ['CUDA_VISIBLE_DEVICES'] = ""
-    
+
     with self.graph.as_default(), tf.device(device):
       self.global_step = tf.Variable(0, name='global_step', trainable=False)
-      
+
       self.embedGame = embed.GameEmbedding(**kwargs)
       state_size = self.embedGame.size
       combined_size = state_size + embedAction.size
@@ -84,7 +84,7 @@ class RL(Default):
       print("History size:", history_size)
 
       self.components = {}
-      
+
       if self.predict or (mode == Mode.TRAIN and self.train_model):
         print("Creating model.")
         self.model = Model(self.embedGame, embedAction.size, self.config, **kwargs)
@@ -99,7 +99,7 @@ class RL(Default):
         input_size = history_size + effective_delay * embedAction.size
         self.policy = policyType(input_size, embedAction.size, self.config, **kwargs)
         self.components['policy'] = self.policy
-      
+
       if mode == Mode.TRAIN:
         if self.train_policy or self.train_critic:
           print("Creating critic.")
@@ -112,7 +112,7 @@ class RL(Default):
 
         # manipulating time along the first axis is much more efficient
         # experience_swapped = util.deepMap(tf.transpose, self.experience)
-        
+
         # initial state for recurrent networks
         #self.experience['initial'] = tuple(tf.placeholder(tf.float32, [None, size], name='experience/initial/%d' % i) for i, size in enumerate(self.policy.hidden_size))
         if self.train_policy:
@@ -132,33 +132,33 @@ class RL(Default):
 
         actions = actions[:,memory:]
         rewards = self.experience['reward'][:,memory:]
-        
+
         print("Creating train ops")
 
         with tf.variable_scope('train'):
           train_ops = []
           #losses = []
           #loss_vars = []
-  
+
           if self.train_model or self.predict:
             train_model, predicted_history = self.model.train(history, actions, self.experience['state'])
           if self.train_model:
             train_ops.append(train_model)
             #losses.append(model_loss)
             #loss_vars.extend(self.model.getVariables())
-          
+
           if self.train_policy or self.train_critic:
             train_critic, targets, advantages = self.critic(history, rewards)
           if self.train_critic:
             train_ops.append(train_critic)
-          
+
           if self.train_policy:
             if self.predict:
               predict_steps = self.model.predict_steps
               history = predicted_history
             else:
               predict_steps = 0
-  
+
             delayed_actions = []
             delay_length = length - delay
             for i in range(predict_steps, delay+1):
@@ -178,19 +178,19 @@ class RL(Default):
           op = self.opt.optimize(total_loss / self.opt.learning_rate)
           train_ops.append(op)
           """
-          
+
         print("Created train op(s)")
 
         #tf.scalar_summary("loss", loss)
         #tf.scalar_summary('learning_rate', tf.log(self.learning_rate))
-        
+
         tf.summary.scalar('reward', tf.reduce_mean(self.experience['reward']))
-        
+
         self.summarize = tf.summary.merge_all()
         self.increment = tf.assign_add(self.global_step, 1)
         self.misc = tf.group(self.increment)
         self.train_ops = tf.group(*train_ops)
-        
+
         print("Creating summary writer at logs/%s." % self.name)
         self.writer = tf.summary.FileWriter('logs/' + self.name)#, self.graph)
       else:
@@ -204,39 +204,39 @@ class RL(Default):
         combined = tf.concat(axis=1, values=[states, prev_actions])
         history = tf.unstack(combined)
         actions = embedAction(self.input['delayed_action'])
-        
+
         if self.predict:
           predict_actions = actions[:self.model.predict_steps]
           delayed_actions = actions[self.model.predict_steps:]
           history = self.model.predict(history, predict_actions, self.input['state'])
         else:
           delayed_actions = actions
-        
+
         self.run_policy = self.policy.getPolicy(history, delayed_actions)
-      
+
       self.debug = debug
-      
+
       self.variables = tf.global_variables()
       self.initializer = tf.global_variables_initializer()
-      
+
       self.saver = tf.train.Saver(self.variables)
-      
+
       self.placeholders = {v.name : tf.placeholder(v.dtype, v.get_shape()) for v in self.variables}
       self.unblobber = tf.group(*[tf.assign(v, self.placeholders[v.name]) for v in self.variables])
-      
+
       self.graph.finalize()
-      
+
       tf_config = dict(
         allow_soft_placement=True,
         #log_device_placement=True,
       )
-      
+
       if self.save_cpu:
         tf_config.update(
           inter_op_parallelism_threads=1,
           intra_op_parallelism_threads=1,
         )
-      
+
       self.sess = tf.Session(
         graph=self.graph,
         config=tf.ConfigProto(**tf_config),
@@ -252,24 +252,24 @@ class RL(Default):
   def train(self, experiences, batch_steps=1, train=True, log=True, zipped=False, **kwargs):
     if not zipped:
       experiences = util.deepZip(*experiences)
-    
+
     input_dict = dict(util.deepValues(util.deepZip(self.experience, experiences)))
-    
+
     """
     saved_data = self.sess.run(self.saved_data, input_dict)
     handles = [t.handle for t in saved_data]
-    
+
     saved_dict = dict(zip(self.placeholders, handles))
     """
-    
+
     run_dict = dict(
       global_step = self.global_step,
       misc = self.misc
     )
-    
+
     if train:
       run_dict.update(train=self.train_ops)
-    
+
     if self.profile:
       run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
       run_metadata = tf.RunMetadata()
@@ -281,7 +281,7 @@ class RL(Default):
 
     if log:
       run_dict.update(summary=self.summarize)
-    
+
     for _ in range(batch_steps):
       try:
         results = self.sess.run(run_dict, input_dict,
@@ -292,7 +292,7 @@ class RL(Default):
           pickle.dump(experiences, f)
         raise e
       #print('After run: %s' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-      
+
       global_step = results['global_step']
       if log:
         print('add_summary')
@@ -320,13 +320,12 @@ class RL(Default):
 
   def init(self):
     self.sess.run(self.initializer)
-  
+
   def blob(self):
     with self.graph.as_default():
       values = self.sess.run(self.variables)
       return {var.name: val for var, val in zip(self.variables, values)}
-  
+
   def unblob(self, blob):
     #self.sess.run(self.unblobber, {self.placeholders[k]: v for k, v in blob.items()})
     self.sess.run(self.unblobber, {v: blob[k] for k, v in self.placeholders.items()})
-
