@@ -220,9 +220,11 @@ class Agent(Default):
 		self.action = self.actions.push(action)
 		current.action = self.action
 		current.prob = self.probs.push(prob)
-		print(self.frame_counter)
+		if(self.frame_counter % 2000 == 2):
+			print(self.frame_counter)
 		#save_obj(input_dict, 'dict' + string(self.frame_counter))
-		#self.datafile.create_dataset('state' + str(self.frame_counter), data=np.array(self.flatten(input_dict) + [self.action]).astype('float32'))
+		if(self.frame_counter % 20 == 2):
+			self.datafile.create_dataset('state' + str(self.frame_counter), data=np.array(self.flatten(input_dict) + [self.action]).astype('float32'))
 		self.rl.actionType.send(self.action, pad, self.char)
 		'''
 		s = np.array(self.flatten(input_dict)).astype('float32')
